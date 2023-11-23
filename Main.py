@@ -16,22 +16,21 @@ from PIL import Image, ImageTk
 from collections import Counter
 from HashVideo import hash_videos
 from HashVideo import search_query_video
+from OnlyPlayVideo import playVideo
 
 
 # USE THIS is you want to regenerate the video hash map, for example change the hash size or hash function
 
 # video_files = [f"./Videos/video{i}.mp4" for i in range(1, 12)]
 # hash_tables_all = hash_videos(video_files,10)
-#
-# with open('my_dict_new.json', 'w') as f:
+# with open("my_dict_new.json", "w") as f:
 #     json.dump(hash_tables_all, f)
 
 
+path_query = "./Queries/video11_1.mp4"
+path_orig = "./Videos/video11.mp4"
 
-path_query = "./Queries/video1_1.mp4"
-path_orig = "./Videos/video1.mp4"
-
-with open('my_dict_new.json') as f:
+with open("my_dict_new.json") as f:
     hash_table_all = json.load(f)
 start_time = tm.time()
 search_dict = dict()
@@ -40,11 +39,11 @@ for key, hash_table in hash_table_all.items():
     frameno = 0
     savedframes = 0
     cap1 = cv2.VideoCapture(path_query)
-    bufferName = 'tempFrameFile.bmp'
+    bufferName = "tempFrameFile.bmp"
     time1 = cap1.get(cv2.CAP_PROP_POS_MSEC)
     fps1 = cap1.get(cv2.CAP_PROP_FPS)
     total_frames1 = cap1.get(cv2.CAP_PROP_FRAME_COUNT)
-    while (True):
+    while True:
         ret, frame = cap1.read()
         if ret:
             print("time stamp current frame:", frameno / fps1)
@@ -52,8 +51,13 @@ for key, hash_table in hash_table_all.items():
             savedframes += 1
             temp = str(imagehash.whash(Image.open(bufferName), hash_size=16))
             # temp = frame_rgb_hash(frame)
-            if (temp in hash_table):
-                print("found frame in " + str(frameno) + " is in hash_table (original video) " + str(hash_table[temp]))
+            if temp in hash_table:
+                print(
+                    "found frame in "
+                    + str(frameno)
+                    + " is in hash_table (original video) "
+                    + str(hash_table[temp])
+                )
                 Covered_frames = Covered_frames + hash_table[temp]
             # hash_table[temp] = savedframes
             frameno += 10  # i.e. at 30 fps, this advances one second
@@ -61,7 +65,7 @@ for key, hash_table in hash_table_all.items():
         else:
             cap1.release()
             break
-    if(len(Covered_frames)>20):
+    if len(Covered_frames) > 20:
         search_dict = Covered_frames
         break
 print("--- %s seconds ---" % (tm.time() - start_time))
@@ -90,15 +94,7 @@ start_frame = min(filtered_data)
 end_frame = max(filtered_data)
 
 
-
-
-
-
-
-
 #  BELOW ARE VIDEO PLAYER
-
-
 
 window = tk.Tk()
 window.title("Video Player")
@@ -106,6 +102,7 @@ window.title("Video Player")
 # Set up the main and query videos
 main_cap = cv2.VideoCapture(path_orig)
 main_cap.set(cv2.CAP_PROP_POS_FRAMES, start_frame)
+
 query_cap = cv2.VideoCapture(path_query)
 # Get total number of frames and fps for both videos
 total_frames_main = int(main_cap.get(cv2.CAP_PROP_FRAME_COUNT))
@@ -120,9 +117,13 @@ lbl_query_video = tk.Label(window)
 lbl_query_video.grid(row=0, column=1)
 
 # Create progress bars
-progress_main = ttk.Progressbar(window, length=200, mode='determinate', maximum=total_frames_main)
+progress_main = ttk.Progressbar(
+    window, length=200, mode="determinate", maximum=total_frames_main
+)
 progress_main.grid(row=2, column=0)
-progress_query = ttk.Progressbar(window, length=200, mode='determinate', maximum=total_frames_query)
+progress_query = ttk.Progressbar(
+    window, length=200, mode="determinate", maximum=total_frames_query
+)
 progress_query.grid(row=2, column=1)
 
 # Create labels to display current frame and timestamp
@@ -132,10 +133,9 @@ lbl_query_info = tk.Label(window, text="Frame: 0, Time: 0s")
 lbl_query_info.grid(row=3, column=1)
 
 
-
-
 # This variable will hold the reference to the after event
 after_id = None
+
 
 def format_time(seconds):
     mins = int(seconds // 60)
@@ -150,23 +150,31 @@ query_start_time = 0  # Replace with actual start time in seconds
 query_end_time = 0  # Replace with actual end time in seconds
 
 
-
-
-lbl_query_times = tk.Label(window, text=f"Query Start: {format_time(query_start_time)}, "
-                                        f"Query End: {format_time(query_end_time)}")
+lbl_query_times = tk.Label(
+    window,
+    text=f"Query Start: {format_time(query_start_time)}, "
+    f"Query End: {format_time(query_end_time)}",
+)
 lbl_query_times.grid(row=5, column=0, columnspan=2)
 
 
 def set_video_info(source_video_path, start_time, end_time):
     lbl_video_source.config(text=f"Source Video: {source_video_path}")
-    lbl_query_times.config(text=f"Query Start: {format_time(start_time)}, Query End: {format_time(end_time)}")
+    lbl_query_times.config(
+        text=f"Query Start: {format_time(start_time)}, Query End: {format_time(end_time)}"
+    )
+
 
 # Call this function when you have the details for the query clip
 set_video_info("path_to_main_video.mp4", query_start_time, query_end_time)
 
+simple_start_time = 0
+
+
 # Function to update the frames for both videos
 def update_frames():
     global after_id
+    global simple_start_time
     ret_main, frame_main = main_cap.read()
     ret_query, frame_query = query_cap.read()
 
@@ -183,17 +191,22 @@ def update_frames():
 
     # Update progress bars and info labels for the main video
     current_frame_main = int(main_cap.get(cv2.CAP_PROP_POS_FRAMES))
-    progress_main['value'] = current_frame_main
+    progress_main["value"] = current_frame_main
     time_main = current_frame_main / fps_main
+    simple_start_time = time_main
     formatted_time_main = format_time(time_main)
-    lbl_main_info.config(text=f"Frame: {current_frame_main}, Time: {formatted_time_main}")
+    lbl_main_info.config(
+        text=f"Frame: {current_frame_main}, Time: {formatted_time_main}"
+    )
 
     # Update progress bars and info labels for the query video
     current_frame_query = int(query_cap.get(cv2.CAP_PROP_POS_FRAMES))
-    progress_query['value'] = current_frame_query
+    progress_query["value"] = current_frame_query
     time_query = current_frame_query / fps_query
     formatted_time_query = format_time(time_query)
-    lbl_query_info.config(text=f"Frame: {current_frame_query}, Time: {formatted_time_query}")
+    lbl_query_info.config(
+        text=f"Frame: {current_frame_query}, Time: {formatted_time_query}"
+    )
 
     # Convert frames to PIL format and update the labels
     frame_main_rgb = cv2.cvtColor(frame_main, cv2.COLOR_BGR2RGB)
@@ -229,8 +242,8 @@ def reset_videos():
         after_id = None
     main_cap.set(cv2.CAP_PROP_POS_FRAMES, start_frame)
     query_cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
-    progress_main['value'] = 0
-    progress_query['value'] = 0
+    progress_main["value"] = 0
+    progress_query["value"] = 0
     lbl_main_info.config(text="Frame: 0, Time: 0s")
     lbl_query_info.config(text="Frame: 0, Time: 0s")
 
@@ -249,5 +262,9 @@ btn_play.grid(row=1, column=1)
 btn_pause = ttk.Button(window, text="PAUSE", command=pause_videos)
 btn_pause.grid(row=1, column=2)
 
-# Start the GUI
+# # Start the GUI
 window.mainloop()
+
+# # Simple Player UI
+# update_frames()
+# playVideo(path_orig, int(simple_start_time))
