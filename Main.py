@@ -28,13 +28,12 @@ from OnlyPlayVideo import playVideo
 #     json.dump(hash_tables_all, f)
 
 
-path_query = "./Queries/video4_1.mp4" # change to rgb
-path_orig = "./Videos/video4.mp4"
+path_query = "./Queries/video1_1.mp4"
 
-with open("my_dict_new.json") as f:
-    hash_table_all = json.load(f)
 start_time = tm.time()
 search_dict = dict()
+with open("my_dict_new.json") as f:
+    hash_table_all = json.load(f)
 
 for key, hash_table in hash_table_all.items():
     Covered_frames = []
@@ -46,9 +45,6 @@ for key, hash_table in hash_table_all.items():
     fps1 = cap1.get(cv2.CAP_PROP_FPS)
     total_frames1 = cap1.get(cv2.CAP_PROP_FRAME_COUNT)
 
-    # Covered_frames_orig = []
-
-    search_dict = Covered_frames
     while True:
         ret, frame = cap1.read()
         if ret: 
@@ -57,7 +53,6 @@ for key, hash_table in hash_table_all.items():
                 cv2.imwrite(bufferName, frame)
                 savedframes += 1
                 temp = str(imagehash.phash(Image.open(bufferName), hash_size=16))
-                # temp = frame_rgb_hash(frame)
                 if temp in hash_table:
                     print(
                         "found frame in "
@@ -68,16 +63,15 @@ for key, hash_table in hash_table_all.items():
                     Covered_frames += [hash_table[temp][i] - frameno for i in range(len(hash_table[temp]))]
 
                     print(frameno, Covered_frames)
-                # hash_table[temp] = savedframes
         else:
             cap1.release()
             break
-        # frameno += 10  # i.e. at 30 fps, this advances one second
         frameno += 100
         cap1.set(cv2.CAP_PROP_POS_FRAMES, frameno)
-    if len(Covered_frames) > 0:
+    if len(Covered_frames) > len(search_dict):
         search_dict = Covered_frames
-        print(search_dict)
+        path_orig = key
+        print("search dict", search_dict)
         break
 print("--- %s seconds ---" % (tm.time() - start_time))
 
@@ -157,29 +151,30 @@ def format_time(seconds):
 
 
 # Texts
-lbl_video_source = tk.Label(window, text="Source Video: path_to_main_video.mp4")
+lbl_video_source = tk.Label(window, text="Source Video: " + path_orig)
 lbl_video_source.grid(row=4, column=0, columnspan=2)
 query_start_time = 0  # Replace with actual start time in seconds
 query_end_time = 0  # Replace with actual end time in seconds
 
 
 lbl_query_times = tk.Label(
-    window,
-    text=f"Query Start: {format_time(query_start_time)}, "
-    f"Query End: {format_time(query_end_time)}",
+    window
+    # ,
+    # text=f"Query Start: {format_time(query_start_time)}, "
+    # f"Query End: {format_time(query_end_time)}",
 )
 lbl_query_times.grid(row=5, column=0, columnspan=2)
 
 
 def set_video_info(source_video_path, start_time, end_time):
     lbl_video_source.config(text=f"Source Video: {source_video_path}")
-    lbl_query_times.config(
-        text=f"Query Start: {format_time(start_time)}, Query End: {format_time(end_time)}"
-    )
+    # lbl_query_times.config(
+    #     text=f"Query Start: {format_time(start_time)}, Query End: {format_time(end_time)}"
+    # )
 
 
 # Call this function when you have the details for the query clip
-set_video_info("path_to_main_video.mp4", query_start_time, query_end_time)
+set_video_info(path_orig, query_start_time, query_end_time)
 
 simple_start_time = 0
 
