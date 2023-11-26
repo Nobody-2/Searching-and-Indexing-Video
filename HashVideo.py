@@ -13,7 +13,7 @@ def hash_frame(frame, hash_size=16):
     """
     buffer_name = 'tempFrameFile.bmp'
     cv2.imwrite(buffer_name, frame)
-    return str(imagehash.whash(Image.open(buffer_name), hash_size=hash_size))
+    return str(imagehash.phash(Image.open(buffer_name), hash_size=hash_size))
 
 def process_video(video_path, frame_step=10, hash_size=16):
     """

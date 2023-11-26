@@ -2,12 +2,13 @@ import cv2
 from PIL import Image
 import numpy as np
 import imagehash
-import time as tm
+import time as tmclear
 import json
 import hashlib
 import os
 from scipy import stats
 from sklearn.cluster import DBSCAN
+import time as tm
 
 import tkinter as tk
 from tkinter import ttk
@@ -18,22 +19,23 @@ from HashVideo import hash_videos
 from HashVideo import search_query_video
 from OnlyPlayVideo import playVideo
 
-
 # USE THIS is you want to regenerate the video hash map, for example change the hash size or hash function
 
 # video_files = [f"./Videos/video{i}.mp4" for i in range(1, 12)]
-# hash_tables_all = hash_videos(video_files,10)
+# video_files = ["./Videos/video2.mp4"]
+# hash_tables_all = hash_videos(video_files, frame_step=1, hash_size=16)
 # with open("my_dict_new.json", "w") as f:
 #     json.dump(hash_tables_all, f)
 
 
-path_query = "./Queries/video11_1.mp4"
-path_orig = "./Videos/video11.mp4"
+path_query = "./Queries/video4_1.mp4" # change to rgb
+path_orig = "./Videos/video4.mp4"
 
 with open("my_dict_new.json") as f:
     hash_table_all = json.load(f)
 start_time = tm.time()
 search_dict = dict()
+
 for key, hash_table in hash_table_all.items():
     Covered_frames = []
     frameno = 0
@@ -43,30 +45,39 @@ for key, hash_table in hash_table_all.items():
     time1 = cap1.get(cv2.CAP_PROP_POS_MSEC)
     fps1 = cap1.get(cv2.CAP_PROP_FPS)
     total_frames1 = cap1.get(cv2.CAP_PROP_FRAME_COUNT)
+
+    # Covered_frames_orig = []
+
+    search_dict = Covered_frames
     while True:
         ret, frame = cap1.read()
-        if ret:
-            print("time stamp current frame:", frameno / fps1)
-            cv2.imwrite(bufferName, frame)
-            savedframes += 1
-            temp = str(imagehash.whash(Image.open(bufferName), hash_size=16))
-            # temp = frame_rgb_hash(frame)
-            if temp in hash_table:
-                print(
-                    "found frame in "
-                    + str(frameno)
-                    + " is in hash_table (original video) "
-                    + str(hash_table[temp])
-                )
-                Covered_frames = Covered_frames + hash_table[temp]
-            # hash_table[temp] = savedframes
-            frameno += 10  # i.e. at 30 fps, this advances one second
-            cap1.set(cv2.CAP_PROP_POS_FRAMES, frameno)
+        if ret: 
+            # if frameno in [0, 200, 500]:
+                # print("time stamp current frame:", frameno / fps1)
+                cv2.imwrite(bufferName, frame)
+                savedframes += 1
+                temp = str(imagehash.phash(Image.open(bufferName), hash_size=16))
+                # temp = frame_rgb_hash(frame)
+                if temp in hash_table:
+                    print(
+                        "found frame in "
+                        + str(frameno)
+                        + " is in hash_table (original video) "
+                        + str(hash_table[temp])
+                    )
+                    Covered_frames += [hash_table[temp][i] - frameno for i in range(len(hash_table[temp]))]
+
+                    print(frameno, Covered_frames)
+                # hash_table[temp] = savedframes
         else:
             cap1.release()
             break
-    if len(Covered_frames) > 20:
+        # frameno += 10  # i.e. at 30 fps, this advances one second
+        frameno += 100
+        cap1.set(cv2.CAP_PROP_POS_FRAMES, frameno)
+    if len(Covered_frames) > 0:
         search_dict = Covered_frames
+        print(search_dict)
         break
 print("--- %s seconds ---" % (tm.time() - start_time))
 
@@ -93,6 +104,8 @@ filtered_data = [x for x in data if lower_bound <= x <= upper_bound]
 start_frame = min(filtered_data)
 end_frame = max(filtered_data)
 
+start_frame = np.argmax(np.bincount(filtered_data))
+print("start_frame", start_frame)
 
 #  BELOW ARE VIDEO PLAYER
 
