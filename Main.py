@@ -1,3 +1,5 @@
+import pygame  #pip install pygame
+from pygame import mixer
 import cv2
 from PIL import Image
 import numpy as np
@@ -19,12 +21,13 @@ from HashVideo import hash_videos
 from HashVideo import search_query_video
 from OnlyPlayVideo import playVideo
 
+
 # USE THIS is you want to regenerate the video hash map, for example change the hash size or hash function
 
 # video_files = [f"./Videos/video{i}.mp4" for i in range(1, 12)]
 # video_files = ["./Videos/video2.mp4"]
 # hash_tables_all = hash_videos(video_files, frame_step=1, hash_size=16)
-# with open("my_dict_new.json", "w") as f:
+# with open("my_dict_new.json", "w") as f:  
 #     json.dump(hash_tables_all, f)
 
 
@@ -95,20 +98,23 @@ IQR = Q3 - Q1
 lower_bound = Q1 - 1.5 * IQR
 upper_bound = Q3 + 1.5 * IQR
 filtered_data = [x for x in data if lower_bound <= x <= upper_bound]
-start_frame = min(filtered_data)
+# start_frame = min(filtered_data)
 end_frame = max(filtered_data)
 
 start_frame = np.argmax(np.bincount(filtered_data))
 print("start_frame", start_frame)
 
 #  BELOW ARE VIDEO PLAYER
-
 window = tk.Tk()
 window.title("Video Player")
 
 # Set up the main and query videos
 main_cap = cv2.VideoCapture(path_orig)
+# main_player = MediaPlayer(path_orig)
 main_cap.set(cv2.CAP_PROP_POS_FRAMES, start_frame)
+
+
+
 
 query_cap = cv2.VideoCapture(path_query)
 # Get total number of frames and fps for both videos
@@ -235,9 +241,29 @@ def update_frames():
     # Schedule the next frame update
     after_id = window.after(33, update_frames)
 
+video_filename = path_orig.split('/')[-1]
+audio_filename = video_filename.split(".")[0] + ".wav"
+audio_path = "./Videos/Audios/" + audio_filename
+print(audio_path)
+
+
+mixer.init()
+mixer.music.load(audio_path)
+mixer.pause()
+paused = True
+reset = True
 
 # Control buttons
 def play_videos():
+    global paused
+    global reset
+    if reset:
+        mixer.music.play()
+        reset = False
+        paused = False
+    elif paused:
+        mixer.music.unpause()
+        paused = False
     global after_id
     if after_id is None:  # Start the update loop only if it's not already running
         update_frames()
@@ -254,13 +280,20 @@ def reset_videos():
     progress_query["value"] = 0
     lbl_main_info.config(text="Frame: 0, Time: 0s")
     lbl_query_info.config(text="Frame: 0, Time: 0s")
-
+    global reset
+    reset = True
+    mixer.music.pause()
+    global paused
+    paused = True
 
 def pause_videos():
     global after_id
     if after_id:
         window.after_cancel(after_id)  # Cancel the ongoing frame update loop
         after_id = None
+    global paused
+    paused = True
+    mixer.music.pause()
 
 
 btn_reset = ttk.Button(window, text="RESET", command=reset_videos)
