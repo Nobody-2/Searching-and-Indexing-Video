@@ -30,13 +30,23 @@ from OnlyPlayVideo import playVideo
 # with open("my_dict_new.json", "w") as f:  
 #     json.dump(hash_tables_all, f)
 
-
+ 
 path_query = "./Queries/video1_1.mp4"
+# path_query = "./Queries/RGB_Files/video1_1.rgb"
 
 start_time = tm.time()
 search_dict = dict()
 with open("my_dict_new.json") as f:
     hash_table_all = json.load(f)
+
+# hash_table_all = {}
+# RGB Hash
+# video_files = [f"./Videos/RGB_Files/video{i}.rgb" for i in range(1, 2)]
+# hash_table_all_temp = hash_videos(video_files, frame_step=1, hash_size=16)
+# for file, table in hash_table_all_temp.items():
+#     hash_table_all[file] = table
+# with open("my_dict_rgb.json", "w") as f:  
+#     json.dump(hash_table_all, f)
 
 for key, hash_table in hash_table_all.items():
     Covered_frames = []
@@ -51,30 +61,30 @@ for key, hash_table in hash_table_all.items():
     while True:
         ret, frame = cap1.read()
         if ret: 
-            # if frameno in [0, 200, 500]:
-                # print("time stamp current frame:", frameno / fps1)
-                cv2.imwrite(bufferName, frame)
-                savedframes += 1
-                temp = str(imagehash.phash(Image.open(bufferName), hash_size=16))
-                if temp in hash_table:
-                    print(
-                        "found frame in "
-                        + str(frameno)
-                        + " is in hash_table (original video) "
-                        + str(hash_table[temp])
-                    )
-                    Covered_frames += [hash_table[temp][i] - frameno for i in range(len(hash_table[temp]))]
+            # print("time stamp current frame:", frameno / fps1)
+            cv2.imwrite(bufferName, frame)
+            savedframes += 1
+            temp = str(imagehash.phash(Image.open(bufferName), hash_size=16))
+            # temp = hashlib.md5(Image.open(bufferName))
+            if temp in hash_table:
+                # print(
+                #     "found frame in "
+                #     + str(frameno)
+                #     + " is in hash_table (original video) "
+                #     + str(hash_table[temp])
+                # )
+                Covered_frames += [hash_table[temp][i] - frameno for i in range(len(hash_table[temp]))]
 
-                    print(frameno, Covered_frames)
+                # print(frameno, Covered_frames)
         else:
             cap1.release()
             break
-        frameno += 100
+        frameno += 200
         cap1.set(cv2.CAP_PROP_POS_FRAMES, frameno)
     if len(Covered_frames) > len(search_dict):
         search_dict = Covered_frames
         path_orig = key
-        print("search dict", search_dict)
+        # print("search dict", search_dict)
         break
 print("--- %s seconds ---" % (tm.time() - start_time))
 
@@ -112,9 +122,6 @@ window.title("Video Player")
 main_cap = cv2.VideoCapture(path_orig)
 # main_player = MediaPlayer(path_orig)
 main_cap.set(cv2.CAP_PROP_POS_FRAMES, start_frame)
-
-
-
 
 query_cap = cv2.VideoCapture(path_query)
 # Get total number of frames and fps for both videos
@@ -253,12 +260,15 @@ mixer.pause()
 paused = True
 reset = True
 
+wav_start = start_frame / 30
+print(wav_start)
 # Control buttons
 def play_videos():
     global paused
     global reset
     if reset:
         mixer.music.play()
+        mixer.music.set_pos(wav_start)
         reset = False
         paused = False
     elif paused:

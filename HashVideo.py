@@ -3,6 +3,7 @@ import json
 from PIL import Image
 import imagehash
 import time as tm
+
 def hash_frame(frame, hash_size=16):
     """
     Hash a single frame using perceptual hash.
@@ -14,6 +15,7 @@ def hash_frame(frame, hash_size=16):
     buffer_name = 'tempFrameFile.bmp'
     cv2.imwrite(buffer_name, frame)
     return str(imagehash.phash(Image.open(buffer_name), hash_size=hash_size))
+    # return hashlib.md5(Image.open(buffer_name).encode())
 
 def process_video(video_path, frame_step=10, hash_size=16):
     """
