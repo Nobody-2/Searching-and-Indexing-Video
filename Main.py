@@ -123,7 +123,7 @@ filtered_data = [x for x in data if lower_bound <= x <= upper_bound]
 # start_frame = min(filtered_data)
 end_frame = max(filtered_data)
 
-start_frame = np.argmax(np.bincount(filtered_data)) - 1
+start_frame = max(0, np.argmax(np.bincount(filtered_data)) - 1)
 print("start_frame", start_frame)
 
 #  BELOW ARE VIDEO PLAYER
