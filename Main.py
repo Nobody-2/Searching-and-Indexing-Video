@@ -1,4 +1,8 @@
-import pygame  #pip install pygame
+import os
+import sys
+
+os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
+import pygame  # pip install pygame
 from pygame import mixer
 import cv2
 from PIL import Image
@@ -27,11 +31,30 @@ from OnlyPlayVideo import playVideo
 # video_files = [f"./Videos/video{i}.mp4" for i in range(1, 12)]
 # video_files = ["./Videos/video2.mp4"]
 # hash_tables_all = hash_videos(video_files, frame_step=1, hash_size=16)
-# with open("my_dict_new.json", "w") as f:  
+# with open("my_dict_new.json", "w") as f:
 #     json.dump(hash_tables_all, f)
 
- 
-path_query = "./Queries/video1_1.mp4"
+
+path_query = ""  # ./Queries/video1_1.mp4
+mode_query = ""  # simple, debug
+
+# pass as CLI arguments : python Main.py ./Queries/video1_1.mp4 simple
+
+
+def main():
+    if len(sys.argv) > 1:
+        global path_query
+        path_query = sys.argv[1]
+        # print(f"Path query: {path_query}")
+
+        global mode_query
+        mode_query = sys.argv[2]  # simple / split
+        # print(f"Mode: {mode_query}")
+
+
+if __name__ == "__main__":
+    main()
+
 # path_query = "./Queries/RGB_Files/video1_1.rgb"
 
 start_time = tm.time()
@@ -45,7 +68,7 @@ with open("my_dict_new.json") as f:
 # hash_table_all_temp = hash_videos(video_files, frame_step=1, hash_size=16)
 # for file, table in hash_table_all_temp.items():
 #     hash_table_all[file] = table
-# with open("my_dict_rgb.json", "w") as f:  
+# with open("my_dict_rgb.json", "w") as f:
 #     json.dump(hash_table_all, f)
 
 for key, hash_table in hash_table_all.items():
@@ -60,7 +83,7 @@ for key, hash_table in hash_table_all.items():
 
     while True:
         ret, frame = cap1.read()
-        if ret: 
+        if ret:
             # print("time stamp current frame:", frameno / fps1)
             cv2.imwrite(bufferName, frame)
             savedframes += 1
@@ -73,7 +96,9 @@ for key, hash_table in hash_table_all.items():
                 #     + " is in hash_table (original video) "
                 #     + str(hash_table[temp])
                 # )
-                Covered_frames += [hash_table[temp][i] - frameno for i in range(len(hash_table[temp]))]
+                Covered_frames += [
+                    hash_table[temp][i] - frameno for i in range(len(hash_table[temp]))
+                ]
 
                 # print(frameno, Covered_frames)
         else:
@@ -111,7 +136,7 @@ filtered_data = [x for x in data if lower_bound <= x <= upper_bound]
 # start_frame = min(filtered_data)
 end_frame = max(filtered_data)
 
-start_frame = np.argmax(np.bincount(filtered_data))
+start_frame = np.argmax(np.bincount(filtered_data)) - 1
 print("start_frame", start_frame)
 
 #  BELOW ARE VIDEO PLAYER
@@ -246,9 +271,10 @@ def update_frames():
     lbl_query_video.configure(image=imgtk_query)
 
     # Schedule the next frame update
-    after_id = window.after(33, update_frames)
+    after_id = window.after(30, update_frames)
 
-video_filename = path_orig.split('/')[-1]
+
+video_filename = path_orig.split("/")[-1]
 audio_filename = video_filename.split(".")[0] + ".wav"
 audio_path = "./Videos/Audios/" + audio_filename
 print(audio_path)
@@ -262,6 +288,8 @@ reset = True
 
 wav_start = start_frame / 30
 print(wav_start)
+
+
 # Control buttons
 def play_videos():
     global paused
@@ -296,6 +324,7 @@ def reset_videos():
     global paused
     paused = True
 
+
 def pause_videos():
     global after_id
     if after_id:
@@ -313,9 +342,9 @@ btn_play.grid(row=1, column=1)
 btn_pause = ttk.Button(window, text="PAUSE", command=pause_videos)
 btn_pause.grid(row=1, column=2)
 
-# # Start the GUI
-window.mainloop()
+if mode_query == "simple":
+    update_frames()
+    playVideo(path_orig, int(simple_start_time))
 
-# # Simple Player UI
-# update_frames()
-# playVideo(path_orig, int(simple_start_time))
+else:
+    window.mainloop()

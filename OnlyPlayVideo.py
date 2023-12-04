@@ -13,11 +13,11 @@ from PySide6.QtCore import Qt, QTimer
 
 
 class VLCPlayer(QMainWindow):
-    def __init__(self):
+    def __init__(self, windowTitle):
         super().__init__()
 
         # Create a basic window
-        self.setWindowTitle("VLC Player with Qt")
+        self.setWindowTitle(windowTitle)
         self.setGeometry(100, 100, 352, 288)
 
         # Create a central widget and layout
@@ -106,7 +106,7 @@ class VLCPlayer(QMainWindow):
 
 def playVideo(vid: "Videos/video1.mp4", start_time: 60):
     app = QApplication(sys.argv)
-    player = VLCPlayer()
+    player = VLCPlayer(vid)
     player.show()
 
     # Convert start and end times from seconds to milliseconds
