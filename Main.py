@@ -2,16 +2,14 @@ import os
 import sys
 
 os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
-import pygame  # pip install pygame
 from pygame import mixer
 import cv2
-from PIL import Image
+
 import numpy as np
 import imagehash
 import time as tmclear
 import json
 import hashlib
-import os
 from scipy import stats
 from sklearn.cluster import DBSCAN
 import time as tm
@@ -20,19 +18,8 @@ import tkinter as tk
 from tkinter import ttk
 import cv2
 from PIL import Image, ImageTk
-from collections import Counter
-from HashVideo import hash_videos
 from HashVideo import search_query_video
 from OnlyPlayVideo import playVideo
-
-
-# USE THIS is you want to regenerate the video hash map, for example change the hash size or hash function
-
-# video_files = [f"./Videos/video{i}.mp4" for i in range(1, 12)]
-# video_files = ["./Videos/video2.mp4"]
-# hash_tables_all = hash_videos(video_files, frame_step=1, hash_size=16)
-# with open("my_dict_new.json", "w") as f:
-#     json.dump(hash_tables_all, f)
 
 
 path_query = ""  # ./Queries/video1_1.mp4
@@ -277,7 +264,7 @@ def update_frames():
 video_filename = path_orig.split("/")[-1]
 audio_filename = video_filename.split(".")[0] + ".wav"
 audio_path = "./Videos/Audios/" + audio_filename
-print(audio_path)
+# print(audio_path)
 
 
 mixer.init()
@@ -287,7 +274,7 @@ paused = True
 reset = True
 
 wav_start = start_frame / 30
-print(wav_start)
+# print(wav_start)
 
 
 # Control buttons

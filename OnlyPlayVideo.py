@@ -26,7 +26,7 @@ class VLCPlayer(QMainWindow):
         main_layout = QVBoxLayout(central_widget)
 
         # Create a VLC instance and media player
-        self.vlc_instance = vlc.Instance()
+        self.vlc_instance = vlc.Instance("--quiet")
         self.media_player = self.vlc_instance.media_player_new()
 
         # Create a frame (as a video panel) and add it to the layout
@@ -94,6 +94,7 @@ class VLCPlayer(QMainWindow):
         self.slider.setValue(int(media_pos))
 
     def reset_media(self):
+        self.media_player.stop()
         self.media_player.set_position(0)
         self.media_player.play()
 
