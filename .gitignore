@@ -1,4 +1,7 @@
 __pycache__/
 .venv/
 tempFrameFile.bmp
-
+Queries/
+Videos/Audios/
+Videos/*
+.DS_Store
