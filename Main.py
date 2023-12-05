@@ -3,7 +3,6 @@ import sys
 
 os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
 from pygame import mixer
-import cv2
 
 import numpy as np
 import imagehash
@@ -63,6 +62,10 @@ for key, hash_table in hash_table_all.items():
     frameno = 0
     savedframes = 0
     cap1 = cv2.VideoCapture(path_query)
+    if not cap1.isOpened():
+        print("Error: Cannot find / open file: " + path_query)
+        sys.exit(1)
+
     bufferName = "tempFrameFile.bmp"
     time1 = cap1.get(cv2.CAP_PROP_POS_MSEC)
     fps1 = cap1.get(cv2.CAP_PROP_FPS)
@@ -98,7 +101,11 @@ for key, hash_table in hash_table_all.items():
         path_orig = key
         # print("search dict", search_dict)
         break
-print("--- %s seconds ---" % (tm.time() - start_time))
+
+green_text = "\033[92m"
+reset_text = "\033[0m"
+
+print(green_text + "--- %s seconds ---" % (tm.time() - start_time) + reset_text)
 
 # This part below should use the formatted code in HashVideo but some bug exist so please use above raw code
 
@@ -111,6 +118,9 @@ print("--- %s seconds ---" % (tm.time() - start_time))
 
 
 # This is used to remove strange values
+if not search_dict:
+    print("No search matches found")
+    sys.exit(1)
 
 data = np.array(search_dict)
 Q1 = np.percentile(data, 25)
@@ -123,7 +133,7 @@ filtered_data = [x for x in data if lower_bound <= x <= upper_bound]
 # start_frame = min(filtered_data)
 end_frame = max(filtered_data)
 
-start_frame = max(0, np.argmax(np.bincount(filtered_data)) - 1)
+start_frame = max(0, round(np.argmax(np.bincount(filtered_data)) / 30) * 30)
 print("start_frame", start_frame)
 
 #  BELOW ARE VIDEO PLAYER
