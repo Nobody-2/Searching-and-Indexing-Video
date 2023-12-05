@@ -122,6 +122,8 @@ if not search_dict:
     print("No search matches found")
     sys.exit(1)
 
+print("Video matched to:" + path_orig)
+
 data = np.array(search_dict)
 Q1 = np.percentile(data, 25)
 Q3 = np.percentile(data, 75)
