@@ -4,6 +4,7 @@ from PIL import Image
 import imagehash
 import time as tm
 
+
 def hash_frame(frame, hash_size=16):
     """
     Hash a single frame using perceptual hash.
@@ -12,10 +13,11 @@ def hash_frame(frame, hash_size=16):
     :param hash_size: The size of the hash.
     :return: Hash of the frame.
     """
-    buffer_name = 'tempFrameFile.bmp'
+    buffer_name = "tempFrameFile.bmp"
     cv2.imwrite(buffer_name, frame)
     return str(imagehash.phash(Image.open(buffer_name), hash_size=hash_size))
     # return hashlib.md5(Image.open(buffer_name).encode())
+
 
 # def process_video(video_path, frame_step=10, hash_size=16):
 #     """
@@ -47,6 +49,7 @@ def hash_frame(frame, hash_size=16):
 #     cap.release()
 #     return hash_table
 
+
 def hash_videos(video_paths, frame_step=10, hash_size=16):
     """
     Process multiple video files to create hash tables for each.
@@ -70,9 +73,9 @@ def hash_videos(video_paths, frame_step=10, hash_size=16):
                 ret, frame = cap.read()
                 if not ret:
                     break
-                print("Processing frame " + str(frameno))
+                # print("Processing frame " + str(frameno))
                 frame_hash = hash_frame(frame, hash_size=hash_size)
-                hash_tables.setdefault(frame_hash, []).append([path,frameno])
+                hash_tables.setdefault(frame_hash, []).append([path, frameno])
 
                 frameno += frame_step
                 cap.set(cv2.CAP_PROP_POS_FRAMES, frameno)
@@ -84,6 +87,7 @@ def hash_videos(video_paths, frame_step=10, hash_size=16):
             print(f"Error processing {path}: {e}")
 
     return hash_tables
+
 
 # def search_query_video(query_video_path, hash_table_all, frame_step=1, hash_size=16):
 #     """

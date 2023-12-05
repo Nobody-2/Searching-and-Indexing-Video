@@ -49,7 +49,7 @@ if __name__ == "__main__":
 # os.remove("tempFrameFile.bmp")
 
 
-path_query = "./Queries/video2_1.mp4"
+# path_query = "./Queries/video2_1.mp4"
 
 start_time = tm.time()
 with open("Combined_dict.json") as f:
@@ -68,6 +68,9 @@ Covered_frames = []
 frameno = 0
 savedframes = 0
 cap1 = cv2.VideoCapture(path_query)
+if not cap1.isOpened():
+    print("Cannot find / open file: " + path_query)
+    sys.exit(1)
 bufferName = "tempFrameFile.bmp"
 time1 = cap1.get(cv2.CAP_PROP_POS_MSEC)
 fps1 = cap1.get(cv2.CAP_PROP_FPS)
@@ -93,7 +96,7 @@ while True:
     else:
         cap1.release()
         break
-    frameno += 200
+    frameno += 100
     cap1.set(cv2.CAP_PROP_POS_FRAMES, frameno)
 
 
@@ -116,6 +119,7 @@ if not Covered_frames:
     print("No search matches found")
     sys.exit(1)
 
+
 def most_frequent(List):
     unique, counts = np.unique(List, return_counts=True)
     index = np.argmax(counts)
@@ -132,9 +136,14 @@ Filtered_frames = []
 for each_frame in Covered_frames:
     if each_frame[0] == Most_common_path:
         Filtered_frames.append(each_frame[1])
-start_frame = min(Filtered_frames)
-print("start_frame", start_frame)
+
 path_orig = Most_common_path
+print("Video matched to:" + path_orig)
+
+start_frame = round(min(Filtered_frames) / 30) * 30
+print("start_frame", start_frame)
+
+
 #  BELOW ARE VIDEO PLAYER
 window = tk.Tk()
 window.title("Video Player")
