@@ -140,7 +140,19 @@ for each_frame in Covered_frames:
 path_orig = Most_common_path
 print("Video matched to:" + path_orig)
 
-start_frame = round(min(Filtered_frames) / 30) * 30
+data = np.array(Filtered_frames)
+Q1 = np.percentile(data, 25)
+Q3 = np.percentile(data, 85)
+IQR = Q3 - Q1
+
+lower_bound = Q1 - 1.5 * IQR
+upper_bound = Q3 + 1.5 * IQR
+filtered_data = [x for x in data if lower_bound <= x <= upper_bound]
+# start_frame = min(filtered_data)
+end_frame = max(filtered_data)
+
+
+start_frame = round(min(filtered_data) / 30) * 30
 print("start_frame", start_frame)
 
 
