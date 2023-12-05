@@ -1,6 +1,8 @@
 import os
 import sys
 
+from HashVideo import hash_videos
+
 os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
 from pygame import mixer
 
@@ -42,14 +44,14 @@ if __name__ == "__main__":
 
 # USE THIS is you want to regenerate the video hash map, for example change the hash size or hash function
 
-# video_files = [f"./Videos/video{i}.mp4" for i in range(1, 20)]
+# video_files = [f"./Videos/video{i}.mp4" for i in range(1, 21)]
 # hash_tables_all = hash_videos(video_files, frame_step=1, hash_size=16)
-# with open("Combined_dict.json", "w") as f:
+# with open("Combined_dict_win.json", "w") as f:
 #     json.dump(hash_tables_all, f)
 # os.remove("tempFrameFile.bmp")
 
 
-# path_query = "./Queries/video2_1.mp4"
+# path_query = "./Queries/video8_1.mp4"
 
 start_time = tm.time()
 with open("Combined_dict.json") as f:
