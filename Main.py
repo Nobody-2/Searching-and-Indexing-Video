@@ -17,7 +17,6 @@ import tkinter as tk
 from tkinter import ttk
 import cv2
 from PIL import Image, ImageTk
-from HashVideo import search_query_video
 from OnlyPlayVideo import playVideo
 
 
@@ -41,11 +40,19 @@ def main():
 if __name__ == "__main__":
     main()
 
-# path_query = "./Queries/RGB_Files/video1_1.rgb"
+# USE THIS is you want to regenerate the video hash map, for example change the hash size or hash function
+
+# video_files = [f"./Videos/video{i}.mp4" for i in range(1, 20)]
+# hash_tables_all = hash_videos(video_files, frame_step=1, hash_size=16)
+# with open("Combined_dict.json", "w") as f:
+#     json.dump(hash_tables_all, f)
+# os.remove("tempFrameFile.bmp")
+
+
+path_query = "./Queries/video2_1.mp4"
 
 start_time = tm.time()
-search_dict = dict()
-with open("my_dict_new.json") as f:
+with open("Combined_dict.json") as f:
     hash_table_all = json.load(f)
 
 # hash_table_all = {}
@@ -57,50 +64,38 @@ with open("my_dict_new.json") as f:
 # with open("my_dict_rgb.json", "w") as f:
 #     json.dump(hash_table_all, f)
 
-for key, hash_table in hash_table_all.items():
-    Covered_frames = []
-    frameno = 0
-    savedframes = 0
-    cap1 = cv2.VideoCapture(path_query)
-    if not cap1.isOpened():
-        print("Error: Cannot find / open file: " + path_query)
-        sys.exit(1)
-
-    bufferName = "tempFrameFile.bmp"
-    time1 = cap1.get(cv2.CAP_PROP_POS_MSEC)
-    fps1 = cap1.get(cv2.CAP_PROP_FPS)
-    total_frames1 = cap1.get(cv2.CAP_PROP_FRAME_COUNT)
-
-    while True:
-        ret, frame = cap1.read()
-        if ret:
-            # print("time stamp current frame:", frameno / fps1)
-            cv2.imwrite(bufferName, frame)
-            savedframes += 1
-            temp = str(imagehash.phash(Image.open(bufferName), hash_size=16))
-            # temp = hashlib.md5(Image.open(bufferName))
-            if temp in hash_table:
-                # print(
-                #     "found frame in "
-                #     + str(frameno)
-                #     + " is in hash_table (original video) "
-                #     + str(hash_table[temp])
-                # )
-                Covered_frames += [
-                    hash_table[temp][i] - frameno for i in range(len(hash_table[temp]))
-                ]
-
-                # print(frameno, Covered_frames)
-        else:
-            cap1.release()
-            break
-        frameno += 200
-        cap1.set(cv2.CAP_PROP_POS_FRAMES, frameno)
-    if len(Covered_frames) > len(search_dict):
-        search_dict = Covered_frames
-        path_orig = key
-        # print("search dict", search_dict)
+Covered_frames = []
+frameno = 0
+savedframes = 0
+cap1 = cv2.VideoCapture(path_query)
+bufferName = "tempFrameFile.bmp"
+time1 = cap1.get(cv2.CAP_PROP_POS_MSEC)
+fps1 = cap1.get(cv2.CAP_PROP_FPS)
+total_frames1 = cap1.get(cv2.CAP_PROP_FRAME_COUNT)
+while True:
+    ret, frame = cap1.read()
+    if ret:
+        # print("time stamp current frame:", frameno / fps1)
+        cv2.imwrite(bufferName, frame)
+        savedframes += 1
+        temp = str(imagehash.phash(Image.open(bufferName), hash_size=16))
+        # temp = hashlib.md5(Image.open(bufferName))
+        if temp in hash_table_all:
+            # print(
+            #     "found frame in "
+            #     + str(frameno)
+            #     + " is in hash_table (original video) "
+            #     + str(hash_table[temp])
+            # )
+            # Covered_frames += [hash_table_all[temp][i] - frameno for i in range(len(hash_table_all[temp]))]
+            Covered_frames += hash_table_all[temp]
+            # print(frameno, Covered_frames)
+    else:
+        cap1.release()
         break
+    frameno += 200
+    cap1.set(cv2.CAP_PROP_POS_FRAMES, frameno)
+
 
 green_text = "\033[92m"
 reset_text = "\033[0m"
@@ -117,27 +112,29 @@ print(green_text + "--- %s seconds ---" % (tm.time() - start_time) + reset_text)
 # frames_flatted = frame_numbers = [original_frame_no for _, original_frame_no, _ in found_frames]
 
 
-# This is used to remove strange values
-if not search_dict:
+if not Covered_frames:
     print("No search matches found")
     sys.exit(1)
 
-print("Video matched to:" + path_orig)
+def most_frequent(List):
+    unique, counts = np.unique(List, return_counts=True)
+    index = np.argmax(counts)
+    return unique[index]
 
-data = np.array(search_dict)
-Q1 = np.percentile(data, 25)
-Q3 = np.percentile(data, 75)
-IQR = Q3 - Q1
 
-lower_bound = Q1 - 1.5 * IQR
-upper_bound = Q3 + 1.5 * IQR
-filtered_data = [x for x in data if lower_bound <= x <= upper_bound]
-# start_frame = min(filtered_data)
-end_frame = max(filtered_data)
+Most_common_path = ""
+Video_path_all = []
 
-start_frame = max(0, round(np.argmax(np.bincount(filtered_data)) / 30) * 30)
+for each_frame in Covered_frames:
+    Video_path_all.append(each_frame[0])
+Most_common_path = most_frequent(Video_path_all)
+Filtered_frames = []
+for each_frame in Covered_frames:
+    if each_frame[0] == Most_common_path:
+        Filtered_frames.append(each_frame[1])
+start_frame = min(Filtered_frames)
 print("start_frame", start_frame)
-
+path_orig = Most_common_path
 #  BELOW ARE VIDEO PLAYER
 window = tk.Tk()
 window.title("Video Player")
