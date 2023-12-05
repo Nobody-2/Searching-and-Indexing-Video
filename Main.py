@@ -1,138 +1,153 @@
-import pygame
+import os
+import sys
+
+os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
+from pygame import mixer
+
 import numpy as np
 import imagehash
+import time as tmclear
 import json
-import os
+import hashlib
+from scipy import stats
+from sklearn.cluster import DBSCAN
 import time as tm
-import moviepy.editor as mp
-import threading
 
 import tkinter as tk
 from tkinter import ttk
 import cv2
 from PIL import Image, ImageTk
-from collections import Counter
-from HashVideo import hash_videos
+from HashVideo import search_query_video
 from OnlyPlayVideo import playVideo
 
 
-# USE THIS is you want to regenerate the video hash map, for example change the hash size or hash function
+path_query = ""  # ./Queries/video1_1.mp4
+mode_query = ""  # simple, debug
 
-# video_files = [f"./Videos/video{i}.mp4" for i in range(1, 20)]
-# hash_tables_all = hash_videos(video_files, frame_step=1, hash_size=16)
-# with open("Combined_dict.json", "w") as f:
-#     json.dump(hash_tables_all, f)
-# os.remove("tempFrameFile.bmp")
+# pass as CLI arguments : python Main.py ./Queries/video1_1.mp4 simple
 
- 
-path_query = "./Queries/video2_1.mp4"
+
+def main():
+    if len(sys.argv) > 1:
+        global path_query
+        path_query = sys.argv[1]
+        # print(f"Path query: {path_query}")
+
+        global mode_query
+        mode_query = sys.argv[2]  # simple / split
+        # print(f"Mode: {mode_query}")
+
+
+if __name__ == "__main__":
+    main()
+
+# path_query = "./Queries/RGB_Files/video1_1.rgb"
 
 start_time = tm.time()
 search_dict = dict()
-with open("Combined_dict.json") as f:
+with open("my_dict_new.json") as f:
     hash_table_all = json.load(f)
 
+# hash_table_all = {}
+# RGB Hash
+# video_files = [f"./Videos/RGB_Files/video{i}.rgb" for i in range(1, 2)]
+# hash_table_all_temp = hash_videos(video_files, frame_step=1, hash_size=16)
+# for file, table in hash_table_all_temp.items():
+#     hash_table_all[file] = table
+# with open("my_dict_rgb.json", "w") as f:
+#     json.dump(hash_table_all, f)
 
-Covered_frames = []
-frameno = 0
-savedframes = 0
-cap1 = cv2.VideoCapture(path_query)
-bufferName = "tempFrameFile.bmp"
-time1 = cap1.get(cv2.CAP_PROP_POS_MSEC)
-fps1 = cap1.get(cv2.CAP_PROP_FPS)
-total_frames1 = cap1.get(cv2.CAP_PROP_FRAME_COUNT)
+for key, hash_table in hash_table_all.items():
+    Covered_frames = []
+    frameno = 0
+    savedframes = 0
+    cap1 = cv2.VideoCapture(path_query)
+    if not cap1.isOpened():
+        print("Error: Cannot find / open file: " + path_query)
+        sys.exit(1)
 
-while True:
-    ret, frame = cap1.read()
-    if ret:
-        # print("time stamp current frame:", frameno / fps1)
-        cv2.imwrite(bufferName, frame)
-        savedframes += 1
-        temp = str(imagehash.phash(Image.open(bufferName), hash_size=16))
-        # temp = hashlib.md5(Image.open(bufferName))
-        if temp in hash_table_all:
-            # print(
-            #     "found frame in "
-            #     + str(frameno)
-            #     + " is in hash_table (original video) "
-            #     + str(hash_table[temp])
-            # )
-            # Covered_frames += [hash_table_all[temp][i] - frameno for i in range(len(hash_table_all[temp]))]
-            Covered_frames += hash_table_all[temp]
-            # print(frameno, Covered_frames)
-    else:
-        cap1.release()
+    bufferName = "tempFrameFile.bmp"
+    time1 = cap1.get(cv2.CAP_PROP_POS_MSEC)
+    fps1 = cap1.get(cv2.CAP_PROP_FPS)
+    total_frames1 = cap1.get(cv2.CAP_PROP_FRAME_COUNT)
+
+    while True:
+        ret, frame = cap1.read()
+        if ret:
+            # print("time stamp current frame:", frameno / fps1)
+            cv2.imwrite(bufferName, frame)
+            savedframes += 1
+            temp = str(imagehash.phash(Image.open(bufferName), hash_size=16))
+            # temp = hashlib.md5(Image.open(bufferName))
+            if temp in hash_table:
+                # print(
+                #     "found frame in "
+                #     + str(frameno)
+                #     + " is in hash_table (original video) "
+                #     + str(hash_table[temp])
+                # )
+                Covered_frames += [
+                    hash_table[temp][i] - frameno for i in range(len(hash_table[temp]))
+                ]
+
+                # print(frameno, Covered_frames)
+        else:
+            cap1.release()
+            break
+        frameno += 200
+        cap1.set(cv2.CAP_PROP_POS_FRAMES, frameno)
+    if len(Covered_frames) > len(search_dict):
+        search_dict = Covered_frames
+        path_orig = key
+        # print("search dict", search_dict)
         break
-    frameno += 200
-    cap1.set(cv2.CAP_PROP_POS_FRAMES, frameno)
-    # if len(Covered_frames) > len(search_dict):
-    #     search_dict = Covered_frames
-    #     path_orig = key
-    #     # print("search dict", search_dict)
-    #     break
-print("--- %s seconds ---" % (tm.time() - start_time))
 
-def most_frequent(List):
-    unique, counts = np.unique(List, return_counts=True)
-    index = np.argmax(counts)
-    return unique[index]
+green_text = "\033[92m"
+reset_text = "\033[0m"
 
-Most_common_path = ""
-Video_path_all = []
+print(green_text + "--- %s seconds ---" % (tm.time() - start_time) + reset_text)
 
-for each_frame in Covered_frames:
-    Video_path_all.append(each_frame[0])
-Most_common_path = most_frequent(Video_path_all)
-Filtered_frames = []
-for each_frame in Covered_frames:
-    if each_frame[0] == Most_common_path:
-        Filtered_frames.append(each_frame[1])
+# This part below should use the formatted code in HashVideo but some bug exist so please use above raw code
 
-start_frame = min(Filtered_frames)
-# end_frame = max(filtered_data)
-# start_frame = np.argmax(np.bincount(filtered_data))
+# start_time = tm.time()
+# found_frames = search_query_video(path_query, hash_table_all)
+# print("--- %s seconds ---" % (tm.time() - start_time))
+# print("Found Frames:", found_frames)
+#
+# frames_flatted = frame_numbers = [original_frame_no for _, original_frame_no, _ in found_frames]
+
+
+# This is used to remove strange values
+if not search_dict:
+    print("No search matches found")
+    sys.exit(1)
+
+print("Video matched to:" + path_orig)
+
+data = np.array(search_dict)
+Q1 = np.percentile(data, 25)
+Q3 = np.percentile(data, 75)
+IQR = Q3 - Q1
+
+lower_bound = Q1 - 1.5 * IQR
+upper_bound = Q3 + 1.5 * IQR
+filtered_data = [x for x in data if lower_bound <= x <= upper_bound]
+# start_frame = min(filtered_data)
+end_frame = max(filtered_data)
+
+start_frame = max(0, round(np.argmax(np.bincount(filtered_data)) / 30) * 30)
 print("start_frame", start_frame)
-
 
 #  BELOW ARE VIDEO PLAYER
 window = tk.Tk()
-window.title("VLC Video Player")
-
-audio_thread = None
-audio_playing = False
-main_video_clip = mp.VideoFileClip(Most_common_path)
-audio_clip = main_video_clip.audio
-def play_audio():
-    global audio_playing, audio_clip
-    try:
-        if audio_clip:  # 检查audio_clip是否已经初始化
-            audio_playing = True
-            audio_clip.preview()  # 播放音频
-        else:
-            print("Audio clip is not initialized.")
-    except Exception as e:
-        print(f"Error playing audio: {e}")
-        audio_playing = False
-def init_audio_clip():
-    global audio_clip
-    try:
-        main_video_clip = mp.VideoFileClip(Most_common_path)
-        audio_clip = main_video_clip.audio
-    except Exception as e:
-        print(f"Error initializing audio clip: {e}")
-        audio_clip = None
-def stop_audio():
-    global audio_playing
-    audio_playing = False
-    audio_clip.close()
-
+window.title("Video Player")
 
 # Set up the main and query videos
-main_cap = cv2.VideoCapture(Most_common_path)
+main_cap = cv2.VideoCapture(path_orig)
+# main_player = MediaPlayer(path_orig)
 main_cap.set(cv2.CAP_PROP_POS_FRAMES, start_frame)
+
 query_cap = cv2.VideoCapture(path_query)
-
-
 # Get total number of frames and fps for both videos
 total_frames_main = int(main_cap.get(cv2.CAP_PROP_FRAME_COUNT))
 total_frames_query = int(query_cap.get(cv2.CAP_PROP_FRAME_COUNT))
@@ -173,7 +188,7 @@ def format_time(seconds):
 
 
 # Texts
-lbl_video_source = tk.Label(window, text="Source Video: " + Most_common_path)
+lbl_video_source = tk.Label(window, text="Source Video: " + path_orig)
 lbl_video_source.grid(row=4, column=0, columnspan=2)
 query_start_time = 0  # Replace with actual start time in seconds
 query_end_time = 0  # Replace with actual end time in seconds
@@ -196,15 +211,15 @@ def set_video_info(source_video_path, start_time, end_time):
 
 
 # Call this function when you have the details for the query clip
-set_video_info(Most_common_path, query_start_time, query_end_time)
+set_video_info(path_orig, query_start_time, query_end_time)
 
-# simple_start_time = 0
+simple_start_time = 0
 
 
 # Function to update the frames for both videos
 def update_frames():
     global after_id
-    # global simple_start_time
+    global simple_start_time
     ret_main, frame_main = main_cap.read()
     ret_query, frame_query = query_cap.read()
 
@@ -253,19 +268,46 @@ def update_frames():
 
     lbl_main_video.configure(image=imgtk_main)
     lbl_query_video.configure(image=imgtk_query)
-    # Schedule the next frame update
-    after_id = window.after(33, update_frames)
 
+    # Schedule the next frame update
+    after_id = window.after(30, update_frames)
+
+
+video_filename = path_orig.split("/")[-1]
+audio_filename = video_filename.split(".")[0] + ".wav"
+audio_path = "./Videos/Audios/" + audio_filename
+# print(audio_path)
+
+
+mixer.init()
+mixer.music.load(audio_path)
+mixer.pause()
+paused = True
+reset = True
+
+wav_start = start_frame / 30
+# print(wav_start)
+
+
+# Control buttons
 def play_videos():
-    global after_id, audio_thread
-    if after_id is None:
+    global paused
+    global reset
+    if reset:
+        mixer.music.play()
+        mixer.music.set_pos(wav_start)
+        reset = False
+        paused = False
+    elif paused:
+        mixer.music.unpause()
+        paused = False
+    global after_id
+    if after_id is None:  # Start the update loop only if it's not already running
         update_frames()
-    if not audio_playing:
-        audio_thread = threading.Thread(target=play_audio)
-        audio_thread.start()
+
 
 def reset_videos():
-    global after_id, audio_playing
+    global after_id
     if after_id:
         window.after_cancel(after_id)  # Cancel the ongoing frame update loop
         after_id = None
@@ -275,15 +317,21 @@ def reset_videos():
     progress_query["value"] = 0
     lbl_main_info.config(text="Frame: 0, Time: 0s")
     lbl_query_info.config(text="Frame: 0, Time: 0s")
-    stop_audio()
-    init_audio_clip()
+    global reset
+    reset = True
+    mixer.music.pause()
+    global paused
+    paused = True
+
+
 def pause_videos():
-    global after_id, audio_playing
+    global after_id
     if after_id:
         window.after_cancel(after_id)  # Cancel the ongoing frame update loop
         after_id = None
-    stop_audio()
-
+    global paused
+    paused = True
+    mixer.music.pause()
 
 
 btn_reset = ttk.Button(window, text="RESET", command=reset_videos)
@@ -293,6 +341,9 @@ btn_play.grid(row=1, column=1)
 btn_pause = ttk.Button(window, text="PAUSE", command=pause_videos)
 btn_pause.grid(row=1, column=2)
 
-# # Start the GUI
-window.mainloop()
+if mode_query == "simple":
+    update_frames()
+    playVideo(path_orig, int(simple_start_time))
 
+else:
+    window.mainloop()
