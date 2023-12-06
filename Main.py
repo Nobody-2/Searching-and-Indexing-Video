@@ -144,10 +144,11 @@ for each_frame in Covered_frames:
     Filtered_frames.append(each_frame[1])
 
 start_frame_arr = [arr[1] for arr in Covered_frames]
-start_frame = round(most_frequent(start_frame_arr) / 30) * 30
+most_frequent_frame = most_frequent(start_frame_arr)
+start_frame = round(most_frequent_frame / 30) * 30
 print("start_frame", start_frame)
 
-path_arr = [arr[0] for arr in Covered_frames if arr[1] == start_frame]
+path_arr = [arr[0] for arr in Covered_frames if arr[1] == most_frequent_frame]
 path_orig = most_frequent(path_arr)
 print("Video matched to:" + path_orig)
 
