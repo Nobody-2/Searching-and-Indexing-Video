@@ -53,9 +53,10 @@ if __name__ == "__main__":
 
 # path_query = "./Queries/video8_1.mp4"
 
-start_time = tm.time()
 with open("Combined_dict.json") as f:
     hash_table_all = json.load(f)
+
+start_time = tm.time()
 
 # hash_table_all = {}
 # RGB Hash

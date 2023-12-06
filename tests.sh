@@ -6,3 +6,7 @@ do
     # Execute the python script with each video file
     $PYTHON_PATH Main.py ./Queries/video${i}_1.mp4 simple
 done
+$PYTHON_PATH Main.py ./Queries/video19_1.mp4 simple
+$PYTHON_PATH Main.py ./Queries/video19_2.mp4 simple
+$PYTHON_PATH Main.py ./Queries/video19_3.mp4 simple
+$PYTHON_PATH Main.py ./Queries/video19_full.mp4 simple
