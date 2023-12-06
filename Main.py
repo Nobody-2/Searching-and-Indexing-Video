@@ -86,15 +86,17 @@ while True:
         temp = str(imagehash.phash(Image.open(bufferName), hash_size=16))
         # temp = hashlib.md5(Image.open(bufferName))
         if temp in hash_table_all:
-            # print(
-            #     "found frame in "
-            #     + str(frameno)
-            #     + " is in hash_table (original video) "
-            #     + str(hash_table[temp])
-            # )
+            print(
+                "found frame in "
+                + str(frameno)
+                + " is in hash_table (original video) "
+                + str(hash_table_all[temp])
+            )
             # Covered_frames += [hash_table_all[temp][i] - frameno for i in range(len(hash_table_all[temp]))]
-            Covered_frames += hash_table_all[temp]
-            # print(frameno, Covered_frames)
+            arr = hash_table_all[temp]
+            arr = [[ele[0], ele[1] - frameno] for ele in arr]
+            Covered_frames += arr
+            print(frameno, Covered_frames)
     else:
         cap1.release()
         break
