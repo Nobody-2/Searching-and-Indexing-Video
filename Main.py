@@ -86,23 +86,26 @@ while True:
         temp = str(imagehash.phash(Image.open(bufferName), hash_size=16))
         # temp = hashlib.md5(Image.open(bufferName))
         if temp in hash_table_all:
-            print(
-                "found frame in "
-                + str(frameno)
-                + " is in hash_table (original video) "
-                + str(hash_table_all[temp])
-            )
+            # print(
+            #     "found frame in "
+            #     + str(frameno)
+            #     + " is in hash_table (original video) "
+            #     + str(len(hash_table_all[temp]))
+            #     + str(hash_table_all[temp])
+            # )
             # Covered_frames += [hash_table_all[temp][i] - frameno for i in range(len(hash_table_all[temp]))]
+            # if len(hash_table_all[temp]) < 20:
             arr = hash_table_all[temp]
             arr = [[ele[0], ele[1] - frameno] for ele in arr]
             Covered_frames += arr
-            print(frameno, Covered_frames)
+            # print(frameno, Covered_frames)
     else:
         cap1.release()
         break
     frameno += 100
     cap1.set(cv2.CAP_PROP_POS_FRAMES, frameno)
 
+# print(Covered_frames)
 
 green_text = "\033[92m"
 reset_text = "\033[0m"
@@ -138,27 +141,15 @@ for each_frame in Covered_frames:
 Most_common_path = most_frequent(Video_path_all)
 Filtered_frames = []
 for each_frame in Covered_frames:
-    if each_frame[0] == Most_common_path:
-        Filtered_frames.append(each_frame[1])
+    Filtered_frames.append(each_frame[1])
 
-path_orig = Most_common_path
-print("Video matched to:" + path_orig)
-
-data = np.array(Filtered_frames)
-Q1 = np.percentile(data, 25)
-Q3 = np.percentile(data, 85)
-IQR = Q3 - Q1
-
-lower_bound = Q1 - 1.5 * IQR
-upper_bound = Q3 + 1.5 * IQR
-filtered_data = [x for x in data if lower_bound <= x <= upper_bound]
-# start_frame = min(filtered_data)
-end_frame = max(filtered_data)
-
-
-start_frame = round(min(filtered_data) / 30) * 30
+start_frame_arr = [arr[1] for arr in Covered_frames]
+start_frame = round(most_frequent(start_frame_arr) / 30) * 30
 print("start_frame", start_frame)
 
+path_arr = [arr[0] for arr in Covered_frames if arr[1] == start_frame]
+path_orig = most_frequent(path_arr)
+print("Video matched to:" + path_orig)
 
 #  BELOW ARE VIDEO PLAYER
 window = tk.Tk()
