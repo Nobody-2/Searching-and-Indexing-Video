@@ -29,14 +29,18 @@ mode_query = ""  # simple, debug
 
 
 def main():
-    if len(sys.argv) > 1:
-        global path_query
+    global path_query
+    if len(sys.argv) == 3:
         path_query = sys.argv[1]
         # print(f"Path query: {path_query}")
 
         global mode_query
         mode_query = sys.argv[2]  # simple / split
         # print(f"Mode: {mode_query}")
+
+    elif len(sys.argv) == 2:
+        path_query = sys.argv[1]
+        # print(f"Path query: {path_query}")
 
 
 if __name__ == "__main__":
@@ -285,7 +289,7 @@ def update_frames():
     lbl_query_video.configure(image=imgtk_query)
 
     # Schedule the next frame update
-    after_id = window.after(30, update_frames)
+    after_id = window.after(29, update_frames)
 
 
 video_filename = path_orig.split("/")[-1]
